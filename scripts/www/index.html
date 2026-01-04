@@ -1,88 +1,329 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <link rel="stylesheet" href="./static/css/styles.css" />
-        <meta
-            http-equiv="Content-Security-Policy"
-            content="default-src * 'unsafe-inline' 'unsafe-eval'"
-        />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Tauri App</title>
-        <script src="./static/js/main.js"></script>
-    </head>
-    <body>
-        <main class="container">
-            <h1>Welcome to TauriMan</h1>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <!-- 核心配置：禁止缩放、适配刘海屏/灵动岛、沉浸式状态栏 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+    <title>今天吃什么Pro</title>
+    <style>
+        /* --- 全局重置与App手感优化 --- */
+        * {
+            box-sizing: border-box;
+            -webkit-user-select: none; /* 禁止长按选中 */
+            user-select: none;
+            -webkit-tap-highlight-color: transparent; /* 移除点击高亮 */
+            outline: none;
+        }
 
-            <div class="row">
-                <a
-                    href="https://tauri.app"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <img
-                        src="./assets/tauri.svg"
-                        class="logo tauri"
-                        alt="Tauri logo"
-                    />
-                </a>
-                <a
-                    href="https://pakeplus.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <img
-                        src="https://hk.gh-proxy.org/https://github.com/Sjj1024/PakePlus/blob/main/app-icon.png"
-                        class="logo vanilla"
-                        alt="JavaScript logo"
-                    />
-                </a>
-            </div>
-            <p>Click to get data</p>
-            <form class="row" id="greet-form">
-                <input id="greet-input" placeholder="Enter a name..." />
-                <button type="submit" id="getdata">GET DATA</button>
-            </form>
-            <div class="functions">
-                <a href="./book.html" target="_self">跳转到book.html</a>
-                <a
-                    href="https://www.baidu.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    >跳到百度blank
-                </a>
-                <a
-                    href="https://www.baidu.com"
-                    target="_self"
-                    rel="noopener noreferrer"
-                >
-                    跳到百度self
-                </a>
-                <button onclick="sayHello()">点击我</button>
-                <button onclick="sayHello()">下载文件</button>
-                <button onclick="sayHello()">上传文件</button>
-                <button onclick="sayHello()">访问相机</button>
-                <button onclick="sayHello()">访问麦克风</button>
-                <button onclick="sayHello()">访问相册</button>
-                <button class="btn" onclick="openWechat()">打开微信</button>
-                <button class="btn" onclick="openWechatScan()">
-                    打开扫一扫
-                </button>
-                <button class="btn" onclick="openZhihu()">打开知乎</button>
-                <button onclick="sayHello()">打开抖音</button>
-                <button onclick="sayHello()">用浏览器打开</button>
-                <button>打开知乎</button>
-            </div>
-            <p id="greet-msg"></p>
-            <img src="./static/image/cursor.jpeg" alt="logo" />
-            <video
-                src="https://hk.gh-proxy.org/https://github.com/Sjj1024/PakePlus/blob/main/docs/static/videos/pakeplus.mp4"
-                autoplay
-                controls
-                style="width: 100%; height: 100%"
-            ></video>
-            <audio src="./static/music/yin.mp3" controls></audio>
-        </main>
-    </body>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            height: 100vh;
+            width: 100vw;
+            /* 适配刘海屏/底部横条的安全区域 */
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            
+            /* 更有食欲的暖色渐变背景 */
+            background: linear-gradient(160deg, #ffd194 0%, #d45646 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            overflow: hidden; /* 禁止页面滚动 */
+        }
+
+        /* --- 顶部区域 --- */
+        header {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding-bottom: 20px;
+            width: 100%;
+        }
+        
+        h1 {
+            font-size: 26px;
+            color: #fff;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: rgba(255,255,255,0.9);
+            margin-top: 8px;
+            font-weight: normal;
+        }
+
+        /* --- 中间卡片区域 --- */
+        .main-container {
+            flex: 2;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+        }
+
+        .food-card {
+            width: 88vw; /* 占据屏幕宽度的88% */
+            height: 32vh; /* 占据屏幕高度的32% */
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2), 0 5px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* 放在卡片左上角的分类标签 */
+        .tag {
+            position: absolute;
+            top: 16px;
+            left: 20px;
+            background-color: #ffeaa7;
+            color: #d35400;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            opacity: 0.8;
+        }
+
+        .food-name {
+            font-size: 42px; /* 默认大字体 */
+            font-weight: 800;
+            color: #2c3e50;
+            line-height: 1.3;
+            word-break: keep-all; /* 防止中文词组断开 */
+            transition: font-size 0.1s; /* 字体大小变化时的过渡 */
+        }
+
+        /* 如果字数太多，动态添加这个类变小字体 */
+        .food-name.long-text {
+            font-size: 28px;
+        }
+
+        .food-name.super-long-text {
+            font-size: 22px;
+        }
+
+        /* --- 底部操作区域 --- */
+        footer {
+            flex: 1.5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 20px;
+            width: 100%;
+        }
+
+        #actionBtn {
+            background: linear-gradient(to right, #ff9966, #ff5e62);
+            width: 75vw;
+            height: 64px;
+            border-radius: 32px;
+            border: none;
+            color: white;
+            font-size: 22px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            box-shadow: 0 10px 25px rgba(212, 86, 70, 0.4);
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #actionBtn:active {
+            transform: scale(0.95);
+            box-shadow: 0 5px 15px rgba(212, 86, 70, 0.4);
+        }
+
+        /* 选中时的卡片动画 */
+        .selected-anim {
+            transform: scale(1.05);
+            border: 4px solid #ff5e62;
+        }
+
+        .data-count {
+            margin-top: 20px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🍱 皇上，吃点啥？</h1>
+        <div class="subtitle">完美治愈选择困难症</div>
+    </header>
+
+    <div class="main-container">
+        <div class="food-card" id="card">
+            <div class="tag" id="tag">准备好了吗</div>
+            <div class="food-name" id="result">点击按钮<br>翻牌子</div>
+        </div>
+    </div>
+
+    <footer>
+        <button id="actionBtn" onclick="toggleLottery()">⚡ 帮我选！</button>
+        <div class="data-count">已收录 150+ 道美食</div>
+    </footer>
+
+    <script>
+        // --- 扩充版美食数据库 (分类 + 名称) ---
+        const foodDatabase = [
+            // 🍜 面食帝国
+            {name: "兰州拉面", tag: "面食"}, {name: "重庆小面", tag: "面食"},
+            {name: "武汉热干面", tag: "面食"}, {name: "老北京炸酱面", tag: "面食"},
+            {name: "陕西油泼面", tag: "面食"}, {name: "过桥米线", tag: "面食"},
+            {name: "螺蛳粉", tag: "面食"}, {name: "酸辣粉", tag: "面食"},
+            {name: "南昌拌粉", tag: "面食"}, {name: "新疆炒米粉", tag: "面食"},
+            {name: "刀削面", tag: "面食"}, {name: "意大利面", tag: "西式面点"},
+            {name: "日式豚骨拉面", tag: "日料"}, {name: "炒河粉/牛河", tag: "面食"},
+            {name: "方便面加两蛋", tag: "宅家"}, {name: "凉皮/肉夹馍", tag: "小吃"},
+
+            // 🍚 米饭杀手
+            {name: "黄焖鸡米饭", tag: "简餐"}, {name: "隆江猪脚饭", tag: "简餐"},
+            {name: "台式卤肉饭", tag: "简餐"}, {name: "海南鸡饭", tag: "简餐"},
+            {name: "扬州炒饭", tag: "炒饭"}, {name: "麻婆豆腐盖饭", tag: "川菜"},
+            {name: "鱼香肉丝盖饭", tag: "川菜"}, {name: "回锅肉盖饭", tag: "川菜"},
+            {name: "烧鸭/叉烧饭", tag: "粤菜"}, {name: "咖喱牛腩饭", tag: "简餐"},
+            {name: "石锅拌饭", tag: "韩料"}, {name: "日式肥牛饭", tag: "日料"},
+            {name: "鳗鱼饭", tag: "日料"}, {name: "木桶饭", tag: "简餐"},
+            {name: "煲仔饭", tag: "粤菜"}, {name: "蛋包饭", tag: "简餐"},
+
+            // 🥘 聚餐硬菜
+            {name: "麻辣香锅", tag: "川菜"}, {name: "重庆火锅", tag: "火锅"},
+            {name: "潮汕牛肉火锅", tag: "火锅"}, {name: "老北京涮肉", tag: "火锅"},
+            {name: "酸菜鱼", tag: "川菜"}, {name: "水煮肉片", tag: "川菜"},
+            {name: "烤鱼", tag: "聚餐"}, {name: "新疆大盘鸡", tag: "硬菜"},
+            {name: "毛血旺", tag: "川菜"}, {name: "椰子鸡", tag: "火锅"},
+            {name: "羊蝎子", tag: "火锅"}, {name: "铁板烧", tag: "日式"},
+            {name: "东北杀猪菜", tag: "东北菜"}, {name: "北京烤鸭", tag: "京菜"},
+            {name: "干锅牛蛙", tag: "湘菜"}, {name: "红烧肉", tag: "家常菜"},
+
+            // 🍔 快乐肥宅
+            {name: "肯德基全家桶", tag: "快餐"}, {name: "麦当劳巨无霸", tag: "快餐"},
+            {name: "汉堡王皇堡", tag: "快餐"}, {name: "塔斯汀中国汉堡", tag: "快餐"},
+            {name: "必胜客披萨", tag: "披萨"}, {name: "达美乐披萨", tag: "披萨"},
+            {name: "赛百味三明治", tag: "简餐"}, {name: "华莱士喷射套餐", tag: "快餐"},
+            {name: "韩式炸鸡", tag: "韩料"}, {name: "炸串/烧烤", tag: "夜宵"},
+            {name: "牛排", tag: "西餐"}, {name: "Taco(塔可)", tag: "墨西哥菜"},
+
+            // 🥟 小吃/早点
+            {name: "沙县小吃", tag: "国民小吃"}, {name: "煎饼果子", tag: "早餐"},
+            {name: "手抓饼", tag: "小吃"}, {name: "小笼包", tag: "面点"},
+            {name: "生煎包", tag: "面点"}, {name: "水饺/蒸饺", tag: "面点"},
+            {name: "馄饨/云吞", tag: "面点"}, {name: "麻辣烫", tag: "国民小吃"},
+            {name: "关东煮", tag: "便利店"}, {name: "章鱼小丸子", tag: "小吃"},
+            {name: "肉饼", tag: "面点"}, {name: "臭豆腐", tag: "小吃"},
+
+            // 🥗 轻食/健康
+            {name: "轻食沙拉", tag: "减脂"}, {name: "波奇饭(Poke)", tag: "轻食"},
+            {name: "全麦三明治", tag: "轻食"}, {name: "酸奶水果捞", tag: "甜品"},
+            {name: "便利店饭团", tag: "便携"}, {name: "玉米/红薯", tag: "粗粮"},
+            
+            // 🎲 搞怪/玄学
+            {name: "再饿一小时", tag: "修仙"}, {name: "去蹭同事的饭", tag: "省钱"},
+            {name: "喝水饱", tag: "极简"}, {name: "减肥，不吃了！", tag: "自律"},
+            {name: "翻翻冰箱剩啥", tag: "清理"}, {name: "便利店盲盒", tag: "随机"},
+            {name: "最贵的那家！", tag: "土豪"}, {name: "外卖销量第一", tag: "从众"}
+        ];
+
+        let timer = null;
+        let isRunning = false;
+        
+        const cardDiv = document.getElementById('card');
+        const resultDiv = document.getElementById('result');
+        const tagDiv = document.getElementById('tag');
+        const btn = document.getElementById('actionBtn');
+
+        function toggleLottery() {
+            // 触感反馈 (安卓App打包后生效)
+            if (navigator.vibrate) navigator.vibrate(15);
+
+            if (isRunning) {
+                stop();
+            } else {
+                start();
+            }
+        }
+
+        function start() {
+            isRunning = true;
+            btn.innerText = "🛑 停！";
+            // 改变按钮样式表示正在运行
+            btn.style.background = "linear-gradient(to right, #f2994a, #f2c94c)"; 
+            
+            cardDiv.classList.remove("selected-anim");
+            
+            timer = setInterval(() => {
+                const randomIndex = Math.floor(Math.random() * foodDatabase.length);
+                const food = foodDatabase[randomIndex];
+                
+                // 更新文字和标签
+                resultDiv.innerText = food.name;
+                tagDiv.innerText = food.tag;
+                
+                // 动态调整字体大小
+                adjustFontSize(food.name);
+                
+                // 随机变换标签颜色
+                tagDiv.style.backgroundColor = getRandomColor();
+                
+            }, 50); // 刷新速度
+        }
+
+        function stop() {
+            clearInterval(timer);
+            isRunning = false;
+
+            // 随机文案
+            const btnTexts = ["😒 不行，换一个", "🎲 再选一次", "😋 就吃这个！", "👌 听天由命"];
+            btn.innerText = btnTexts[Math.floor(Math.random() * btnTexts.length)];
+            btn.style.background = "linear-gradient(to right, #ff9966, #ff5e62)";
+            
+            // 停止时的动画特效
+            cardDiv.classList.add("selected-anim");
+            
+            // 停止时强烈震动
+            if (navigator.vibrate) navigator.vibrate([40, 50, 40]);
+        }
+
+        // 根据字数调整字体大小，适配手机屏
+        function adjustFontSize(text) {
+            resultDiv.classList.remove("long-text", "super-long-text");
+            if (text.length > 8) {
+                resultDiv.classList.add("super-long-text");
+            } else if (text.length > 5) {
+                resultDiv.classList.add("long-text");
+            }
+        }
+
+        // 生成浅色背景色用于标签
+        function getRandomColor() {
+            const hue = Math.floor(Math.random() * 360);
+            return `hsl(${hue}, 80%, 90%)`;
+        }
+    </script>
+</body>
 </html>
